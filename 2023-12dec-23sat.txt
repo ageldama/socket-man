@@ -1,3 +1,10 @@
+
+
+
+
+----------------------------------------------------------------------
+
+
 so-reuse-addr?
 so-keep-alive?
 
@@ -24,90 +31,3 @@ For Windows :
 
   # max is not configurable on Windows
   sock.ioctl(socket.SIO_KEEPALIVE_VALS, (1, idle * 1000, interval * 1000))
-
-----------------------------------------------------------------------
-
-
-use Future::AsyncAwait;
- 
-use IO::Async::Loop;
-use Net::Async::HTTP;
-use URI;
- 
-my $loop = IO::Async::Loop->new();
- 
-my $http = Net::Async::HTTP->new();
- 
-$loop->add( $http );
- 
-my $response = await $http->do_request(
-   uri => URI->new( "http://www.cpan.org/" ),
-);
-
-
-
-
-my $loop = IO::Async::Loop->new;
- 
-my $socket = IO::Socket::INET->new( LocalPort => 1234, Listen => 1 );
- 
-my $handle = IO::Async::Handle->new(
-   handle => $socket,
- 
-   on_read_ready  => sub {
-      my $new_client = $socket->accept; 
-      ...
-   },
-);
- 
-$loop->add( $handle );
-
-
-$listener->listen(
-    addr => {
-      family   => "inet",
-      socktype => "stream",
-      port     => 8001,
-      ip       => "10.0.0.1",
-    },
-  ...
-);
-
-
-
-
-use IO::Async::Loop;
-my $loop = IO::Async::Loop->new;
- 
-my $listener = IO::Async::Listener->new(
-   on_stream => sub {
-      my ( undef, $stream ) = @_;
- 
-      $stream->configure(
-         on_read => sub {
-            my ( $self, $buffref, $eof ) = @_;
-            $self->write( $$buffref );
-            $$buffref = "";
-            return 0;
-         },
-      );
- 
-      $loop->add( $stream );
-   },
-);
- 
-$loop->add( $listener );
- 
-my $socket = IO::Socket::UNIX->new(
-   Local => "echo.sock",
-   Listen => 1,
-) or die "Cannot make UNIX socket - $!\n";
- 
-$listener->listen(
-   handle => $socket,
-);
- 
-$loop->run;
-
-
-

@@ -77,7 +77,7 @@ my $listener = IO::Async::Listener->new(
         $loop->add($stream);
 
         $timer = IO::Async::Timer::Periodic->new(
-            interval => 1,
+            interval => 5,
 
             on_tick => sub {
                 my $p = pokemon;
@@ -114,10 +114,10 @@ $listener->listen(
         my $socket = $listener->read_handle;
 
         # p $socket;
-        setsockopt( $socket, SOL_SOCKET, SO_KEEPALIVE, 1 );
+        # setsockopt( $socket, SOL_SOCKET, SO_KEEPALIVE, 1 );
 
-        setsockopt( $socket, IPPROTO_TCP, TCP_KEEPIDLE,  3 );
-        setsockopt( $socket, IPPROTO_TCP, TCP_KEEPINTVL, 3 );
+        setsockopt( $socket, IPPROTO_TCP, TCP_KEEPIDLE,  1 );
+        setsockopt( $socket, IPPROTO_TCP, TCP_KEEPINTVL, 2 );
         setsockopt( $socket, IPPROTO_TCP, TCP_KEEPCNT,   2 );
 
         say "Now listening on port ", $socket->sockhost, ':', $socket->sockport;

@@ -40,16 +40,16 @@ Async do |top|
     end
 
     server.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
-    # server.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
+    server.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
     
     server.listen(128)
     
     server.accept_each do |peer|
       remote_addr = peer.remote_address
 
-      # peer.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 5)
-      # peer.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 1)
-      # peer.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 2)
+      peer.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 1)
+      peer.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 1)
+      peer.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 2)
 
       Console.logger.info(server) { "Accepted: #{remote_addr.inspect}" }
 
@@ -65,7 +65,10 @@ Async do |top|
 
           Console.logger.info(remote_addr) { "Sent: #{poke}" }
 
-          sleep 20
+          # KEEPIDLE ..이후 KEEPINTVL 마다, KEEPCNT 횟수만큼 Keep-Alive 확인 실패 => 종료.
+          #
+          # 즉, SLEEP > KEEPIDLE + (KEEPINTVL x KEEPCNT) ...만큼이어야 keepalive 유효함:
+          sleep 5
 	  
 	  # Console.logger.info(server) do |buffer|
 	  # 	task.reactor.print_hierarchy(buffer)
