@@ -85,11 +85,15 @@ my $listener = IO::Async::Listener->new(
 $loop->add($listener);
 
 my $socket = IO::Socket::INET->new(
+    LocalHost => '0.0.0.0',
     LocalPort => 1234,
     Listen    => 1,
     ReuseAddr => 1,
     Blocking  => 0
 );
+
+# p $socket;
+setsockopt( $socket, SOL_SOCKET, SO_KEEPALIVE, 1 );
 
 $listener->listen(
     handle    => $socket,
@@ -97,7 +101,7 @@ $listener->listen(
         my ($listener) = @_;
         my $socket = $listener->read_handle;
 
-        say "Now listening on port ", $socket->sockport;
+        say "Now listening on port ", $socket->sockhost, ':', $socket->sockport;
     },
 );
 
