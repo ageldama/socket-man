@@ -11,6 +11,9 @@ use open ':std' => ':encoding(UTF-8)';
 
 use Encode 'encode';
 
+use Socket        qw(IPPROTO_TCP);
+use Socket::Linux qw(TCP_KEEPINTVL TCP_KEEPIDLE TCP_KEEPCNT);
+
 use Future::AsyncAwait;
 use IO::Async::Loop;
 use IO::Async::Listener;
@@ -59,7 +62,16 @@ my $listener = IO::Async::Listener->new(
                     $loop->remove($timer);
                     $timer->stop;
                 }
-            }
+            },
+
+            # --- no effects / unappliables:
+
+            # on_flushed => sub { say 'Flushed.'; },
+
+            # on_send_error => sub {
+            #     my ( $stream, $errno ) = @_;
+            #     say 'ERR:', $errno;
+            # },
         );
 
         $loop->add($stream);
@@ -71,7 +83,8 @@ my $listener = IO::Async::Listener->new(
                 my $p = pokemon;
                 say $p;
                 my $bytes = encode( 'UTF-8', $p );
-                $stream->write( $bytes . "\n" );
+                my $n     = $stream->write( $bytes . "\n" )->get;
+                p($n);
             },
         );
 
@@ -92,7 +105,6 @@ my $socket = IO::Socket::INET->new(
     Blocking  => 0
 );
 
-# p $socket;
 setsockopt( $socket, SOL_SOCKET, SO_KEEPALIVE, 1 );
 
 $listener->listen(
@@ -100,6 +112,13 @@ $listener->listen(
     on_listen => sub {
         my ($listener) = @_;
         my $socket = $listener->read_handle;
+
+        # p $socket;
+        setsockopt( $socket, SOL_SOCKET, SO_KEEPALIVE, 1 );
+
+        setsockopt( $socket, IPPROTO_TCP, TCP_KEEPIDLE,  3 );
+        setsockopt( $socket, IPPROTO_TCP, TCP_KEEPINTVL, 3 );
+        setsockopt( $socket, IPPROTO_TCP, TCP_KEEPCNT,   2 );
 
         say "Now listening on port ", $socket->sockhost, ':', $socket->sockport;
     },
