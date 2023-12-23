@@ -9,8 +9,7 @@ BOOST_LIB_DIR ?= /usr/lib
 
 CXXFLAGS=-g -Wall -fexceptions -std=c++17 -I./json/include -I./spdlog/include \
 	-I$(BOOST_INCLUDE_DIR) -I.
-LDFLAGS=-L$(BOOST_LIB_DIR)
-
+LDFLAGS=-L$(BOOST_LIB_DIR) -lboost_coroutine -lboost_context -lboost_system
 
 TCP_SERV_OBJS=tcp_serv.o
 

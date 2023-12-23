@@ -6,7 +6,9 @@
 #include <string>
 
 #include <boost/asio.hpp>
+#include <boost/asio/spawn.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/format.hpp>
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
@@ -18,16 +20,35 @@ namespace pokemon::server
 
 using boost::asio::ip::tcp;
 
+const unsigned short sending_interval_secs = 5;
+
+std::string
+error_code_str (const boost::system::error_code &ec)
+{
+  return (boost::format ("%1%: %2% %3%") % ec.category ().name () % ec.value ()
+          % ec.message ())
+      .str ();
+}
+
 class session : public std::enable_shared_from_this<session>
 {
 public:
-  session (tcp::socket socket) : socket_ (std::move (socket))
+  session (boost::asio::yield_context yield_context, tcp::socket socket)
+      : socket_ (std::move (socket)),
+        yield_context_ (std::move (yield_context))
   {
-    this->logger = spdlog::stdout_color_mt ("pokemon::server::session");
-    this->logger->info ("Accepted");
 
-    this->timer = std::make_unique<boost::asio::deadline_timer> (
-        this->socket_.get_executor (), boost::posix_time::seconds (5));
+    const std::string addr
+        = (boost::format ("%1%:%2%")
+           % socket_.remote_endpoint ().address ().to_string ()
+           % socket_.remote_endpoint ().port ())
+              .str ();
+
+    const std::string logger_name
+        = (boost::format ("pokemon::server::session/%1%") % addr).str ();
+
+    this->logger = spdlog::stdout_color_mt (logger_name);
+    this->logger->info ("Accepted");
   }
 
   ~session () { this->logger->info ("Closed"); }
@@ -35,11 +56,16 @@ public:
   void
   start ()
   {
-    while (true)
-      {
-        do_write (pokemon::random_pick () + "\n");
+    boost::asio::deadline_timer timer (this->socket_.get_executor ());
 
-        (*this->timer).async_wait ();
+    while (this->socket_.is_open ())
+      {
+        const auto pokemon = pokemon::random_pick ();
+        this->do_write (pokemon + "\n");
+
+        timer.expires_from_now (
+            boost::posix_time::seconds{ sending_interval_secs });
+        timer.async_wait (this->yield_context_);
       }
   }
 
@@ -53,13 +79,14 @@ private:
         [this, self] (boost::system::error_code ec, std::size_t n_written) {
           if (ec)
             {
-              // TODO error-handling
-              this->logger->warn ("write-error");
+              this->logger->warn ("write-error: {}", error_code_str (ec));
+              this->socket_.close ();
             }
         });
   }
 
   tcp::socket socket_;
+  boost::asio::yield_context yield_context_;
 
   enum
   {
@@ -69,20 +96,22 @@ private:
   char data_[max_length];
 
   std::shared_ptr<spdlog::logger> logger;
-
-  std::unique_ptr<boost::asio::deadline_timer> timer;
 };
 
-// TODO sleep?
-// TODO on-close?
 class server
 {
 public:
   server (boost::asio::io_context &io_context, short port)
       : acceptor_ (io_context, tcp::endpoint (tcp::v4 (), port))
   {
+    const std::string addr
+        = (boost::format ("%1%:%2%")
+           % acceptor_.local_endpoint ().address ().to_string ()
+           % acceptor_.local_endpoint ().port ())
+              .str ();
+
     this->logger = spdlog::stdout_color_mt ("pokemon::server::server");
-    this->logger->info ("Accepting:"); // TODO: host:port?
+    this->logger->info ("Accepting: {}", addr);
     do_accept ();
   }
 
@@ -95,10 +124,17 @@ private:
           if (ec)
             {
               // TODO error-handling
+              this->logger->warn ("accept-error: {}", error_code_str (ec));
             }
           else
             {
-              std::make_shared<session> (std::move (socket))->start ();
+              boost::asio::spawn (
+                  this->acceptor_.get_executor (),
+                  [this, &socket] (boost::asio::yield_context yield_context) {
+                    std::make_shared<session> (std::move (yield_context),
+                                               std::move (socket))
+                        ->start ();
+                  });
             }
 
           do_accept ();
