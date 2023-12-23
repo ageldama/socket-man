@@ -1,2 +1,3 @@
 tcp_serv
 *.o
+*.gch
