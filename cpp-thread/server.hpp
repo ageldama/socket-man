@@ -6,6 +6,7 @@
 #include <string>
 
 #include <boost/asio.hpp>
+#include <boost/asio/detached.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
@@ -26,7 +27,7 @@ using boost::asio::ip::tcp;
   즉, SLEEP > KEEPIDLE + (KEEPINTVL x KEEPCNT) ...만큼이어야 keepalive 유효함:
 */
 
-const unsigned short sending_interval_secs = 5;
+const unsigned short sending_interval_secs = 7;
 const int keep_idle = 1;
 const int keep_intvl = 1;
 const int keep_cnt = 2;
@@ -145,7 +146,8 @@ private:
                     std::make_shared<session> (std::move (yield_context),
                                                std::move (socket))
                         ->start ();
-                  });
+                  },
+                  boost::asio::detached);
             }
 
           do_accept ();
