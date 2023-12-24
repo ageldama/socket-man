@@ -27,7 +27,7 @@ listener (const std::string address, const boost::asio::ip::port_type port)
       auto executor = co_await this_coro::executor;
       tcp::acceptor acceptor (executor, endpoint);
 
-      logger->info ("is_open = {}", acceptor.is_open ());
+      logger->debug ("is_open = {}", acceptor.is_open ());
 
       logger->info ("Accepting: {}",
                     utils::endpoint_addr_str (acceptor.local_endpoint ()));

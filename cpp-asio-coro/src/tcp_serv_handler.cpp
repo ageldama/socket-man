@@ -11,20 +11,32 @@ using boost::asio::ip::tcp;
 awaitable<void>
 handler (tcp::socket socket)
 {
+  auto logger = spdlog::stdout_color_mt (
+      fmt::format ("tcp_serv::handler/{}",
+                   utils::endpoint_addr_str (socket.remote_endpoint ())));
+
+  logger->info ("Accepted");
+
   try
     {
-      char data[1024];
+      auto timer = boost::asio::steady_timer{ socket.get_executor () };
+
       for (;;)
         {
-          std::size_t n = co_await socket.async_read_some (
-              boost::asio::buffer (data), use_awaitable);
-          co_await async_write (socket, boost::asio::buffer (data, n),
+          auto pokemon = pokemon::random_pick ();
+
+          logger->info ("Sending: {}", pokemon);
+
+          co_await async_write (socket, boost::asio::buffer (pokemon + "\n"),
                                 use_awaitable);
+
+          timer.expires_after (std::chrono::seconds{ 5 });
+          co_await timer.async_wait (use_awaitable);
         }
     }
   catch (std::exception &e)
     {
-      std::printf ("echo Exception: %s\n", e.what ());
+      logger->error ("Exception: {}", e.what ());
     }
 }
 };
