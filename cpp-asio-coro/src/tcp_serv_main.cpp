@@ -3,5 +3,9 @@
 int
 main ()
 {
-  std::cout << pokemon::random_pick () << std::endl;
+  auto logger = spdlog::stdout_color_mt ("tcp_serv");
+
+  logger->info ("random: {}", pokemon::random_pick ());
+
+  exit (EXIT_SUCCESS);
 }
