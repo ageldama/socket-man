@@ -1,0 +1,4 @@
+tcp_serv
+*.o
+*.gch
+compile_commands.json
