@@ -1,6 +1,8 @@
-* TODO c++20 coroutinne + asio
+* DONE c++20 coroutinne + asio
+  CLOSED: [2023-12-25 Mon 00:06]
 
 * DONE boost::format --> fmt
   CLOSED: [2023-12-24 Sun 20:23]
 
-* TODO cmake
+* DONE cmake
+  CLOSED: [2023-12-25 Mon 00:06]
