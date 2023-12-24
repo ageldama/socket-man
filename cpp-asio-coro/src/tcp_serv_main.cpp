@@ -12,10 +12,15 @@ main (int argc, const char **argv)
 
   // logger->info ("random: {}", pokemon::random_pick ());
 
-  if (!tcp_serv::parse_prog_args (argc, argv, host, port))
+  tcp_serv::prog_opts opts;
+
+  if (!tcp_serv::parse_prog_args (argc, argv, opts))
     {
       exit (EXIT_FAILURE);
     }
+
+  logger->info ("host={} port={} send_interval={}s", opts.host, opts.port,
+                opts.send_interval);
 
   try
     {
@@ -24,7 +29,7 @@ main (int argc, const char **argv)
       boost::asio::signal_set signals (io_context, SIGINT, SIGTERM);
       signals.async_wait ([&] (auto, auto) { io_context.stop (); });
 
-      co_spawn (io_context, tcp_serv::listener (host, port), detached);
+      co_spawn (io_context, tcp_serv::listener (opts), detached);
 
       io_context.run ();
     }

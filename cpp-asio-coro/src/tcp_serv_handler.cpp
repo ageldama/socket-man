@@ -9,11 +9,23 @@ using boost::asio::use_awaitable;
 using boost::asio::ip::tcp;
 
 awaitable<void>
-handler (tcp::socket socket)
+handler (tcp::socket socket, const tcp_serv::prog_opts &opts)
 {
   auto logger = spdlog::stdout_color_mt (
       fmt::format ("tcp_serv::handler/{}",
                    utils::endpoint_addr_str (socket.remote_endpoint ())));
+
+  std::chrono::seconds interval_secs{ opts.send_interval };
+
+  socket.set_option (
+      boost::asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPIDLE> (
+          opts.keepalive_idle));
+  socket.set_option (
+      boost::asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPINTVL> (
+          opts.keepalive_interval));
+  socket.set_option (
+      boost::asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPCNT> (
+          opts.keepalive_count));
 
   logger->info ("Accepted");
 
@@ -30,7 +42,7 @@ handler (tcp::socket socket)
           co_await async_write (socket, boost::asio::buffer (pokemon + "\n"),
                                 use_awaitable);
 
-          timer.expires_after (std::chrono::seconds{ 5 });
+          timer.expires_after (interval_secs);
           co_await timer.async_wait (use_awaitable);
         }
     }

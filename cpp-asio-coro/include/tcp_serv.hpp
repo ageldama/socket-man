@@ -13,9 +13,9 @@ namespace tcp_serv
 {
 using boost::asio::awaitable;
 
-awaitable<void> listener (const std::string address,
-                          const boost::asio::ip::port_type port);
+awaitable<void> listener (const tcp_serv::prog_opts &opts);
 
-awaitable<void> handler (boost::asio::ip::tcp::socket socket);
+awaitable<void> handler (boost::asio::ip::tcp::socket socket,
+                         const tcp_serv::prog_opts &opts);
 
 };

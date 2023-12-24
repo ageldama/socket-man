@@ -11,7 +11,9 @@ using boost::asio::ip::tcp;
 namespace this_coro = boost::asio::this_coro;
 
 awaitable<void>
-listener (const std::string address, const boost::asio::ip::port_type port)
+listener (const tcp_serv::prog_opts &opts
+          /*const std::string address, const boost::asio::ip::port_type port*/
+)
 {
   boost::system::error_code ec;
 
@@ -19,13 +21,15 @@ listener (const std::string address, const boost::asio::ip::port_type port)
   logger->info ("PID = {}", getpid ());
 
   boost::asio::ip::tcp::endpoint endpoint{
-    boost::asio::ip::address::from_string (address), port
+    boost::asio::ip::address::from_string (opts.host), opts.port
   };
 
   try
     {
       auto executor = co_await this_coro::executor;
       tcp::acceptor acceptor (executor, endpoint);
+
+      acceptor.set_option (boost::asio::socket_base::keep_alive (true));
 
       logger->debug ("is_open = {}", acceptor.is_open ());
 
@@ -35,7 +39,7 @@ listener (const std::string address, const boost::asio::ip::port_type port)
       for (;;)
         {
           tcp::socket socket = co_await acceptor.async_accept (use_awaitable);
-          co_spawn (executor, tcp_serv::handler (std::move (socket)),
+          co_spawn (executor, tcp_serv::handler (std::move (socket), opts),
                     detached);
         }
     }
