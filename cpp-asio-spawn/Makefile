@@ -7,9 +7,15 @@ CXX ?= g++
 BOOST_INCLUDE_DIR ?= /usr/include
 BOOST_LIB_DIR ?= /usr/lib
 
-CXXFLAGS=-g -Wall -fexceptions -std=c++17 -I./json/include -I./spdlog/include \
+CXXFLAGS=-g -Wall -fexceptions -std=c++17 \
+	-DSPDLOG_FMT_EXTERNAL \
+	-DFMT_HEADER_ONLY \
+	$(pkg-config --cflags spdlog) \
+	$(pkg-config --cflags fmt) \
 	-I$(BOOST_INCLUDE_DIR) -I.
-LDFLAGS=-L$(BOOST_LIB_DIR) -lboost_coroutine -lboost_context -lboost_system
+
+LDFLAGS=-L$(BOOST_LIB_DIR) -lboost_coroutine -lboost_context -lboost_system -lboost_json \
+	$(pkg-config --libs spdlog)
 
 TCP_SERV_OBJS=tcp_serv.o
 

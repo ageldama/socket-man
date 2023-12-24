@@ -14,6 +14,8 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
+#include <fmt/core.h>
+
 #include "pokemon.hpp"
 
 namespace pokemon::server
@@ -35,9 +37,15 @@ const int keep_cnt = 2;
 std::string
 error_code_str (const boost::system::error_code &ec)
 {
-  return (boost::format ("%1%: %2% %3%") % ec.category ().name () % ec.value ()
-          % ec.message ())
-      .str ();
+  return fmt::format ("{}: {} {}", ec.category ().name (), ec.value (),
+                      ec.message ());
+}
+
+std::string
+endpoint_addr_str (const boost::asio::ip::tcp::endpoint &endpoint)
+{
+  return fmt::format ("{}:{}", endpoint.address ().to_string (),
+                      endpoint.port ());
 }
 
 class session : public std::enable_shared_from_this<session>
@@ -48,14 +56,10 @@ public:
         yield_context_ (std::move (yield_context))
   {
 
-    const std::string addr
-        = (boost::format ("%1%:%2%")
-           % socket_.remote_endpoint ().address ().to_string ()
-           % socket_.remote_endpoint ().port ())
-              .str ();
+    const std::string addr = endpoint_addr_str (socket_.remote_endpoint ());
 
     const std::string logger_name
-        = (boost::format ("pokemon::server::session/%1%") % addr).str ();
+        = fmt::format ("pokemon::server::session/{}", addr);
 
     this->logger = spdlog::stdout_color_mt (logger_name);
     this->logger->info ("Accepted");
@@ -107,11 +111,7 @@ public:
   server (boost::asio::io_context &io_context, short port)
       : acceptor_ (io_context, tcp::endpoint (tcp::v4 (), port))
   {
-    const std::string addr
-        = (boost::format ("%1%:%2%")
-           % acceptor_.local_endpoint ().address ().to_string ()
-           % acceptor_.local_endpoint ().port ())
-              .str ();
+    const std::string addr = endpoint_addr_str (acceptor_.local_endpoint ());
 
     this->acceptor_.set_option (boost::asio::socket_base::keep_alive (true));
 

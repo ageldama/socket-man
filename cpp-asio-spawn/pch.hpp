@@ -5,13 +5,15 @@
 #include <string>
 
 #include <boost/asio.hpp>
-#include <boost/asio/spawn.hpp>
 #include <boost/asio/detached.hpp>
+#include <boost/asio/spawn.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
+
+#include <fmt/core.h>
 
 #include "pokemon.hpp"
 #include "server.hpp"
