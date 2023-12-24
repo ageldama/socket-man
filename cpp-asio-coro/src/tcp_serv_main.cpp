@@ -7,7 +7,6 @@ int
 main (int argc, const char **argv)
 {
   auto logger = spdlog::stdout_color_mt ("tcp_serv");
-  boost::asio::ip::port_type port;
 
   // logger->info ("random: {}", pokemon::random_pick ());
 
