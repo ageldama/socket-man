@@ -17,6 +17,13 @@ handler (tcp::socket socket, const tcp_serv::prog_opts &opts)
 
   std::chrono::seconds interval_secs{ opts.send_interval };
 
+  /*
+    KEEPIDLE ..이후 KEEPINTVL 마다, KEEPCNT 횟수만큼 Keep-Alive 확인실패 =>
+    종료.
+
+    즉, INTERVAL > KEEPIDLE + (KEEPINTVL x KEEPCNT) ...만큼이어야 keepalive
+    유효함.
+  */
   socket.set_option (
       boost::asio::detail::socket_option::integer<IPPROTO_TCP, TCP_KEEPIDLE> (
           opts.keepalive_idle));
