@@ -7,7 +7,6 @@ int
 main (int argc, const char **argv)
 {
   auto logger = spdlog::stdout_color_mt ("tcp_serv");
-  std::string host;
   boost::asio::ip::port_type port;
 
   // logger->info ("random: {}", pokemon::random_pick ());
@@ -19,8 +18,10 @@ main (int argc, const char **argv)
       exit (EXIT_FAILURE);
     }
 
-  logger->info ("host={} port={} send_interval={}s", opts.host, opts.port,
-                opts.send_interval);
+  logger->info ("host={} port={} send_interval={}s keepalive<idle={} "
+                "interval={} count={}>",
+                opts.host, opts.port, opts.send_interval, opts.keepalive_idle,
+                opts.keepalive_interval, opts.keepalive_count);
 
   try
     {
