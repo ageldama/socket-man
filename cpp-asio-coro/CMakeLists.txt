@@ -24,6 +24,7 @@ target_include_directories(tcp_serv
 target_sources(tcp_serv
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tcp_serv_listener.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/tcp_serv_handler.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tcp_serv_main.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tcp_serv_progopts.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.cpp

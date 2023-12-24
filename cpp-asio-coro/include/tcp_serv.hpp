@@ -16,4 +16,6 @@ using boost::asio::awaitable;
 awaitable<void> listener (const std::string address,
                           const boost::asio::ip::port_type port);
 
+awaitable<void> handler (boost::asio::ip::tcp::socket socket);
+
 };
