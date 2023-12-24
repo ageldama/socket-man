@@ -1,6 +1,0 @@
-[submodule "cpp-thread/spdlog"]
-	path = cpp-thread/spdlog
-	url = https://github.com/gabime/spdlog.git
-[submodule "cpp-thread/json"]
-	path = cpp-thread/json
-	url = https://github.com/nlohmann/json.git
